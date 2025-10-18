@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Happy Diwali Fireworks Display</title>
+    <!-- Importing a festive, elegant font from Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poiret+One&display=swap"
+      rel="stylesheet"
+    />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* General body styling */
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        font-family: "Poiret One", cursive;
+        background-color: #000; /* Dark sky background */
+      }
+
+      /* ----------------------------------------------------
+           1. VIDEO BACKGROUND STYLING (Initially Hidden)
+           ---------------------------------------------------- */
+      #fireworks-video {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        min-width: 100%;
+        min-height: 100%;
+        width: auto;
+        height: auto;
+        z-index: -100;
+        transform: translate(-50%, -50%);
+
+        /* ENHANCED FILTERS for higher intensity */
+        filter: brightness(1.5) saturate(1.5) contrast(1.2);
+
+        /* Initially hidden, transitions in when the rockets blast */
+        opacity: 0;
+        transition: opacity 0.8s ease-out;
+      }
+
+      /* ----------------------------------------------------
+           2. ROCKET SPARK ANIMATION
+           ---------------------------------------------------- */
+      /* Note: The rocket elements are now created dynamically in JavaScript */
+
+      /* Keyframe animation for the ROCKET DROP (BLASTING DOWNWARDS) */
+      @keyframes launch-rocket {
+        /* Starts at the top of the viewport (100vh down from its starting position) */
+        0% {
+          transform: translateY(-100vh);
+          height: 10px;
+          opacity: 1;
+        }
+        50% {
+          height: 100px;
+        } /* Trail grows mid-fall */
+        /* Ends at the bottom of the viewport (0) */
+        100% {
+          transform: translateY(0);
+          height: 10px;
+          opacity: 0;
+        }
+      }
+
+      /* ----------------------------------------------------
+           3. TEXT OVERLAY STYLING (Initially Hidden)
+           ---------------------------------------------------- */
+      .overlay-text {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        color: #ffd700;
+        text-transform: uppercase;
+
+        /* Initially hidden, will fade in via class on blast */
+        opacity: 0;
+        transition: opacity 1.5s ease-in;
+      }
+
+      /* Class to reveal the text */
+      .animate-reveal {
+        opacity: 1;
+      }
+
+      /* Styling for the main message */
+      .diwali-message {
+        font-size: 8vw;
+        font-weight: bold;
+        letter-spacing: 0.5em;
+        padding: 20px;
+
+        /* ENHANCED TEXT SHADOW for a strong, sparkling glow effect */
+        text-shadow: 0 0 15px #ffd700, 0 0 30px #ff8c00, 0 0 50px #ff4500,
+          0 0 70px rgba(255, 255, 0, 0.7);
+
+        animation: pulse 4s infinite alternate, sparkle-color 6s infinite;
+      }
+
+      /* Keyframe animation to make the text gently 'pulse' in size */
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          opacity: 0.9;
+        }
+        100% {
+          transform: scale(1.05);
+          opacity: 1;
+        }
+      }
+
+      /* Keyframe animation to subtly shift the text shadow color */
+      @keyframes sparkle-color {
+        0% {
+          text-shadow: 0 0 15px #ffd700, 0 0 30px #ff8c00, 0 0 50px #ff4500,
+            0 0 70px rgba(255, 255, 0, 0.7);
+        }
+        50% {
+          text-shadow: 0 0 15px #ffefd5, 0 0 30px #ffd500, 0 0 50px #ffa500,
+            0 0 70px rgba(255, 165, 0, 0.7);
+        }
+        100% {
+          text-shadow: 0 0 15px #ffd700, 0 0 30px #ff8c00, 0 0 50px #ff4500,
+            0 0 70px rgba(255, 255, 0, 0.7);
+        }
+      }
+
+      /* Smaller text for a tagline */
+      .tagline {
+        font-size: 2vw;
+        margin-top: 20px;
+        color: #ffffff;
+        letter-spacing: 0.2em;
+        text-shadow: 0 0 5px #000000;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 1. Video Element (Background - starts hidden) -->
+    <video loop muted playsinline id="fireworks-video">
+      <source src="1741279-hd_1920_1080_30fps.mp4" type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+
+    <!-- 2. The Rocket Spark Element is now dynamically created by JavaScript -->
+
+    <!-- 3. Overlay Text (Content - starts hidden) -->
+    <div class="overlay-text">
+      <div>
+        <div class="diwali-message">Happy Diwali!</div>
+        <div class="tagline">
+          May the festival of lights bring prosperity and joy.
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. JavaScript for Sequence Control -->
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const video = document.getElementById("fireworks-video");
+        const overlay = document.querySelector(".overlay-text");
+        const totalRockets = 10; // Increased number of rockets
+        let rocketsBlasted = 0;
+
+        // New color palette for the individual sparks
+        const rocketColors = [
+          "#FFD700", // Gold
+          "#FF4500", // Orange-Red
+          "#FFFFFF", // White/Silver
+          "#ADFF2F", // Green
+          "#1E90FF", // Blue
+          "#DA70D6", // Orchid
+        ];
+
+        /**
+         * Dynamically creates and animates a single rocket spark that DROPS from the top.
+         * @param {number} delay - The time (ms) before the rocket starts.
+         * @param {number} startX - The horizontal position (vw) to launch from.
+         */
+        const launchRocket = (delay, startX) => {
+          // Select a random color for this rocket
+          const color =
+            rocketColors[Math.floor(Math.random() * rocketColors.length)];
+
+          // Create the spark element
+          const spark = document.createElement("div");
+          spark.style.cssText = `
+                    position: absolute;
+                    /* Positioned at the top of the screen */
+                    top: 0; 
+                    left: ${startX}vw;
+                    width: 4px;
+                    height: 10px; 
+                    background-color: ${color}; 
+                    box-shadow: 0 0 10px ${color}, 0 0 20px ${color}; 
+                    border-radius: 2px;
+                    opacity: 0;
+                    transform: translateX(-50%);
+                `;
+          document.body.appendChild(spark);
+
+          // Start the animation after the specified delay
+          setTimeout(() => {
+            spark.style.opacity = "1";
+            // Launch animation with randomized duration for variety
+            const duration = 1.5 + Math.random() * 0.5; // 1.5s to 2.0s
+            // Use the reversed keyframes
+            spark.style.animation = `launch-rocket ${duration}s ease-in forwards`;
+          }, delay);
+
+          // Listen for the 'BLAST' (animation end) event
+          spark.addEventListener("animationend", () => {
+            spark.remove(); // Clean up the element
+            rocketsBlasted++;
+
+            // Check if all rockets have blasted
+            if (rocketsBlasted >= totalRockets) {
+              triggerMainBlast();
+            }
+          });
+        };
+
+        // Function to trigger the main fireworks video and text reveal
+        const triggerMainBlast = () => {
+          // 3. BLAST! Reveal the video background
+          video.style.opacity = "1";
+
+          // Attempt to play the video (mandatory for mobile/browser policies)
+          video.play().catch((error) => {
+            // Log the error but continue the execution
+            console.warn("Autoplay failed:", error);
+          });
+
+          // 4. Show HAPPY DIWALI text after a short visual delay
+          setTimeout(() => {
+            overlay.classList.add("animate-reveal");
+          }, 300); // 0.3s after the blast/video reveal
+        };
+
+        // 1. Initiate the Multi-Rocket Launch
+        const initialDelay = 500; // Starting delay before first launch (ms)
+        const launchInterval = 200; // Reduced delay for a faster, more intense launch sequence (ms)
+
+        for (let i = 0; i < totalRockets; i++) {
+          const launchDelay = initialDelay + i * launchInterval;
+          // Launch rockets from random positions between 10vw and 90vw (wider spread)
+          const startX = 10 + Math.random() * 80;
+          launchRocket(launchDelay, startX);
+        }
+      });
+    </script>
+  </body>
+</html>
